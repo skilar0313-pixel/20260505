@@ -76,7 +76,7 @@ function draw() {
   if (faces.length > 0) {
     let face = faces[0];
     
-    stroke(255, 0, 0); // 設定線條為紅色
+    stroke(255, 0, 0); // 設定線條採用紅色
     strokeWeight(15);  // 設定線條粗細為 15
     noFill();
     
@@ -84,7 +84,7 @@ function draw() {
       let p1 = face.keypoints[lipIndices[i]];
       let p2 = face.keypoints[lipIndices[i + 1]];
       if (p1 && p2) {
-        // 將偵測到的座標依比例映射到畫面上
+        // 利用 line 指令，將編號點串接在一起，並依比例映射到 60% 的畫面大小
         line(p1.x * (videoW / capture.width), p1.y * (videoH / capture.height), 
              p2.x * (videoW / capture.width), p2.y * (videoH / capture.height));
       }
