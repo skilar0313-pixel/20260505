@@ -1,11 +1,11 @@
 let capture;
-let pg; // 宣告繪圖緩衝區
 let saveBtn; // 儲存按鈕
 let faceMesh; // FaceMesh 模型
 let faces = []; // 存放偵測到的臉部結果
 
 // 指定的臉部辨識連線編號順序
 const lipIndices = [409, 270, 269, 267, 0, 37, 39, 40, 185, 61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291];
+const secondIndices = [76, 77, 90, 180, 85, 16, 315, 404, 320, 307, 306, 408, 304, 303, 302, 11, 72, 73, 74, 184];
 
 function setup() {
   // 建立全螢幕畫布
@@ -24,9 +24,6 @@ function setup() {
   });
   // 開始持續偵測
   faceMesh.detectStart(capture, (results) => { faces = results; });
-
-  // 建立一個繪圖緩衝區，大小設定為畫布寬高的 60%
-  pg = createGraphics(windowWidth * 0.6, windowHeight * 0.6);
 
   // 建立儲存按鈕
   saveBtn = createButton('儲存影像');
@@ -55,14 +52,6 @@ function draw() {
   let x = (width - videoW) / 2;
   let y = (height - videoH) / 2;
   
-  // 更新 createGraphics 緩衝區的內容
-  pg.push();
-  pg.clear(); // 清除上一幀內容，保持緩衝區乾淨（或透明）
-  pg.translate(pg.width, 0);
-  pg.scale(-1, 1); // 同樣實作鏡像翻轉，確保內容一致
-  pg.image(capture, 0, 0, pg.width, pg.height);
-  pg.pop();
-
   // 修正左右顛倒問題（實作水平翻轉鏡像）
   push(); 
   // 將原點移動到影像預定位置的右邊緣
@@ -77,9 +66,10 @@ function draw() {
     let face = faces[0];
     
     stroke(255, 0, 0); // 設定線條採用紅色
-    strokeWeight(15);  // 設定線條粗細為 15
+    strokeWeight(1);  // 設定線條粗細為 1
     noFill();
     
+    // 繪製第一組連線
     for (let i = 0; i < lipIndices.length - 1; i++) {
       let p1 = face.keypoints[lipIndices[i]];
       let p2 = face.keypoints[lipIndices[i + 1]];
@@ -89,19 +79,23 @@ function draw() {
              p2.x * (videoW / capture.width), p2.y * (videoH / capture.height));
       }
     }
+
+    // 繪製第二組連線
+    for (let i = 0; i < secondIndices.length - 1; i++) {
+      let p1 = face.keypoints[secondIndices[i]];
+      let p2 = face.keypoints[secondIndices[i + 1]];
+      if (p1 && p2) {
+        line(p1.x * (videoW / capture.width), p1.y * (videoH / capture.height), 
+             p2.x * (videoW / capture.width), p2.y * (videoH / capture.height));
+      }
+    }
   }
   pop();
-
-  // 將 pg 緩衝區的內容顯示在「視訊畫面的上方」
-  // 這裡將 Y 座標稍微往上移（減去位移量），並縮小顯示以做出層次感
-  image(pg, x + videoW * 0.1, y - 60, videoW * 0.8, videoH * 0.8);
 }
 
 // 當視窗大小改變時，自動調整畫布大小以維持全螢幕
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  // 同步調整緩衝區的大小
-  pg.resizeCanvas(windowWidth * 0.6, windowHeight * 0.6);
   updateButtonPosition();
 }
 
