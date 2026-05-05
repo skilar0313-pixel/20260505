@@ -7,6 +7,13 @@ let faces = []; // 存放偵測到的臉部結果
 const lipIndices = [409, 270, 269, 267, 0, 37, 39, 40, 185, 61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291];
 const secondIndices = [76, 77, 90, 180, 85, 16, 315, 404, 320, 307, 306, 408, 304, 303, 302, 11, 72, 73, 74, 184];
 
+// 新增：眼睛與臉部輪廓編號
+const rightEyeOuter = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7]; // 包含 246
+const rightEyeInner = [130, 247, 30, 29, 27, 28, 56, 190, 243, 112, 26, 22, 23, 24, 110, 25]; // 包含 247
+const leftEyeOuter = [263, 466, 388, 387, 386, 385, 384, 398, 362, 382, 381, 380, 374, 373, 390, 249];
+const leftEyeInner = [359, 467, 260, 259, 257, 258, 286, 414, 463, 341, 256, 252, 253, 254, 339, 255];
+const faceSilhouette = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109];
+
 function setup() {
   // 建立全螢幕畫布
   createCanvas(windowWidth, windowHeight);
@@ -65,11 +72,11 @@ function draw() {
   if (faces.length > 0) {
     let face = faces[0];
     
-    stroke(255, 0, 0); // 設定線條採用紅色
-    strokeWeight(1);  // 設定線條粗細為 1
     noFill();
     
-    // 繪製第一組連線
+    // --- 繪製嘴唇 (紅色, 粗細 1) ---
+    stroke(255, 0, 0);
+    strokeWeight(1);
     for (let i = 0; i < lipIndices.length - 1; i++) {
       let p1 = face.keypoints[lipIndices[i]];
       let p2 = face.keypoints[lipIndices[i + 1]];
@@ -79,8 +86,6 @@ function draw() {
              p2.x * (videoW / capture.width), p2.y * (videoH / capture.height));
       }
     }
-
-    // 繪製第二組連線
     for (let i = 0; i < secondIndices.length - 1; i++) {
       let p1 = face.keypoints[secondIndices[i]];
       let p2 = face.keypoints[secondIndices[i + 1]];
@@ -89,6 +94,28 @@ function draw() {
              p2.x * (videoW / capture.width), p2.y * (videoH / capture.height));
       }
     }
+
+    // --- 繪製眼睛與臉部輪廓 (藍色, 粗細 2) ---
+    stroke(0, 0, 255);
+    strokeWeight(2);
+    
+    // 繪製路徑的輔助函式 (設為 true 則會閉合連線)
+    const drawFeature = (points, isClosed) => {
+      for (let i = 0; i < (isClosed ? points.length : points.length - 1); i++) {
+        let p1 = face.keypoints[points[i]];
+        let p2 = face.keypoints[points[(i + 1) % points.length]];
+        if (p1 && p2) {
+          line(p1.x * (videoW / capture.width), p1.y * (videoH / capture.height), 
+               p2.x * (videoW / capture.width), p2.y * (videoH / capture.height));
+        }
+      }
+    };
+
+    drawFeature(rightEyeOuter, true);
+    drawFeature(rightEyeInner, true);
+    drawFeature(leftEyeOuter, true);
+    drawFeature(leftEyeInner, true);
+    drawFeature(faceSilhouette, true);
   }
   pop();
 }
